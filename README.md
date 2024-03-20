@@ -7,10 +7,10 @@ This software is still in a very experimental phase, so if you're interested in 
 The main usecase for this repository is for training models which have many multimodal inputs and if your experimental setup requires doing a lot of tweaks to the underlying model architecture or processing and combining data sources from different 'modes'.
 
 Things done automatically:
-- Embedding categorical variables into numeric representations
-- Figuring out the shapes of registered neural networks, based on a example batch
-- Automatic handling of masks
-- Saving neural network configuration for easy instantiation in the future
+- **Embedding categorical variables into numeric representations**
+- **Figuring out the shapes of registered neural networks, based on a example batch**
+- **Automatic handling of masks**
+- **Saving neural network configuration for easy instantiation in the future**
 
 ## Tutorial
 Imagine you have two inputs of different shapes:
