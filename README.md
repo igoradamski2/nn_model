@@ -1,5 +1,5 @@
 # nn_model
-A simple model and data package that wraps around Pytorch and allows you to build complex models from your hydra config!
+A simple wrapper around Pytorch that allows you to build complex models straight from a hydra config!
 
 This software is still in a very experimental phase, so if you're interested in contributing and showing different use cases, drop me a email at igor.adamski2@gmail.com.
 
