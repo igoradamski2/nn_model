@@ -1,0 +1,79 @@
+_target_: nn_model.model.AlgoModel
+_convert_: all
+operations:
+  - _target_: nn_model.operations.ElementwiseOperation
+    inp: [3d_timeseries]
+    mod:
+      - _target_: nn_model.modules.cnn.ConvWindow
+        output_size: 64
+        dropout: 0.2
+        window: 2
+        n_blocks: 2
+        nonlinear: LeakyReLU
+        stride: 2
+        batch_norm: false
+      - _target_: nn_model.modules.transformer.BaseTransformerEncoder
+        _recursive_: false
+        num_layers: 1
+        add_positional_encoding: true
+        positional_encoding_linear: false
+        inside_skip: false
+        outside_skip: false
+        norm: true
+        transformer_layer:
+          _target_: torch.nn.TransformerEncoderLayer
+          dropout: 0.2
+          nhead: 4
+          dim_feedforward: 64
+          norm_first: true
+    out: [3d_timeseries]
+    rearrange: "batch one two feature -> (batch one) two feature"
+    slice_result: "[:, :, -1, :]"
+
+  - _target_: nn_model.operations.ElementwiseOperation
+    inp: [1d_static_data]
+    mod:
+      - _target_: nn_model.modules.single_input.Identity
+    out: [1d_static_data]
+
+  - _target_: nn_model.operations.ReduceOperation
+    inp: [3d_photo_data, 1d_static_data]
+    mod: 
+      - _target_: nn_model.modules.multi_input.Concatenate
+        dim: -1
+        fields: ["numeric_features", "mask"]
+        dropout: 0
+      - _target_: nn_model.modules.transformer.BaseTransformerEncoder
+        _recursive_: false
+        num_layers: 2
+        add_positional_encoding: false
+        positional_encoding_linear: false
+        inside_skip: false
+        outside_skip: false
+        norm: true
+        transformer_layer:
+          _target_: torch.nn.TransformerEncoderLayer
+          dropout: 0.2
+          nhead: 1
+          dim_feedforward: 80
+          norm_first: true
+    out: embedding
+
+  - _target_: nn_model.operations.ElementwiseOperation
+    inp: [embedding]
+    mod:
+      - _target_: nn_model.modules.single_input.FullyConnected
+        output_size: 3
+        add_linear: [1]
+        dropout: 0.2
+        nonlinear: ReLU
+        add_predictor: true
+        use_batch_norm: false
+      - _target_: nn_model.modules.allocation.DynamicLongShortAllocator
+        long_short_proportion_module: 
+          _target_: nn_model.modules.single_input.Mean
+          dim: -2
+        allow_cash_allocation: false
+    out: [allocation]
+
+outputs: [allocation]
