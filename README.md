@@ -3,7 +3,25 @@ A simple wrapper around Pytorch that allows you to build complex models straight
 
 This software is still in a very experimental phase, so if you're interested in contributing and showing different use cases, drop me a email at igor.adamski2@gmail.com.
 
-## Main usecase
+# Main motivation & usecase
+## Motivation
+This library came into existance during my work as a ML Researcher. I realised quite soon that it was quite cumbersome to iterate with NN model architectures. Adding new data (inputs) needed to always be handled in the code, owing to different shapes and in turn, a need to reshape the input to match the shapes allowed by common PyTorch modules.
+
+It became clear that there are only 3 types of neural-network components, available in PyTorch, with respect to what input shapes they take in:
+- **FullyConnected (`torch.nn.Linear`)**, where we map a shape $(..., N) -> (..., Y)$ and we can control $Y$
+- **CNN (`torch.nn.ConvNd`)**, where we map a shape $(B, N, M) -> (B, X, Y)$ and we can control $X$ and $Y$
+- **Time series (like `torch.nn.LSTM` or `torch.nn.TransformerEncoderLayer`)**, where we map a shape $(B, N, M) -> (B, N, Y)$ and we can control $Y$
+
+If you stop and think about it, these are actually the only distinct shape-operations that actually exist in Deep Learning (as of 2024).
+
+The `nn_model` library realises that and recognises two types of operations you can do to tensors:
+- `nn_model.operations.ElementwiseOperation`, where we apply a certain module to all inputs in the inputs list
+- `nn_model.operations.ReduceOperation`, where we apply a certain module to the *concatenated* inputs from the inputs list
+
+Each operation in turn, will have two optional parameters:
+- `rearrange`, a string that tells the operation how to rearrange a input shape (in Einstein notation) prior to applying a Neural Network component. For example `batch one two three four -> (batch one two) three four` will rearrange a input of shape incompatible for a LSTM/Transformer into a shape that these torch modules can handle. Whats great is that after applying the module, the operation will rearrange the inputs back to its original shape (*if possible*)!
+- `slice`, a string that tells the operation how to slice a input shape after it has gone through the Neural Network module. For example `[:, :, -1, :]`, will tell the operation to take the last element from the 3^{rd} dimension
+## Use-case
 The main usecase for this repository is for training models which have many multimodal inputs and if your experimental setup requires doing a lot of tweaks to the underlying model architecture or processing and combining data sources from different 'modes'.
 
 Things done automatically:
